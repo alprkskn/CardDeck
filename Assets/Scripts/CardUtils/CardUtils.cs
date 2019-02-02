@@ -8,7 +8,10 @@ public static class CardUtils
     public static readonly int ValueCount = Enum.GetNames(typeof(CardValues)).Length;
     public static readonly int CardCount = KindCount * ValueCount;
 
-    private static readonly CardComparer _comparer = new CardComparer();
+    public const int MinAcceptedStreak = 3;
+
+    private static readonly CardStraightComparer _straightComparer = new CardStraightComparer();
+    private static readonly CardMatchingComparer _matchingComparer = new CardMatchingComparer();
 
     public static CardKinds GetKindById(int id)
     {
@@ -28,7 +31,7 @@ public static class CardUtils
     public static void StraightSort(List<CardInfo> deck)
     {
         // First sort the deck by kinds and values.
-        deck.Sort(_comparer);
+        deck.Sort(_straightComparer);
 
         // Iterate from the end to start. Discard mismatching cards and append to the end of the list.
         int cursor = deck.Count - 1;
@@ -64,27 +67,74 @@ public static class CardUtils
         EndStreak(deck, 0, ref currentStreak);
     }
 
+    public static void MatchingSort(List<CardInfo> deck)
+    {
+        // First sort the deck by kinds and values.
+        deck.Sort(_matchingComparer);
+
+        // Iterate from the end to start. Discard mismatching cards and append to the end of the list.
+        int cursor = deck.Count - 1;
+
+        int currentStreak = 0;
+
+        while (cursor > 0)
+        {
+            if (deck[cursor].Value != deck[cursor - 1].Value)
+            {
+                EndStreak(deck, cursor, ref currentStreak);
+            }
+            else
+            {
+                currentStreak++;
+            }
+
+            cursor--;
+        }
+
+        EndStreak(deck, 0, ref currentStreak);
+    }
+
     private static void EndStreak(List<CardInfo> deck, int cursor, ref int streak)
     {
-        if(streak == 0)
+        if(streak < MinAcceptedStreak - 1)
         {
-            var info = deck[cursor];
-            deck.RemoveAt(cursor);
-            deck.Add(info);
+            for(int i = streak; i >= 0; i--)
+            {
+                var info = deck[cursor + i];
+                deck.RemoveAt(cursor + i);
+                deck.Add(info);
+            }
         }
         else
         {
             // Leave the current streak where they are. Just end the streak
             // TODO: Here, we can collect the info of the current streak if necessary.
-            streak = 0;
+            Debug.Log("Found streak of " + (streak + 1));
         }
+
+        streak = 0;
     }
 }
 
-public class CardComparer : IComparer<CardInfo>
+public class CardStraightComparer : IComparer<CardInfo>
 {
     public int Compare(CardInfo x, CardInfo y)
     {
         return x.GetId().CompareTo(y.GetId());
+    }
+}
+
+public class CardMatchingComparer : IComparer<CardInfo>
+{
+    public int Compare(CardInfo x, CardInfo y)
+    {
+        var valueComparison = x.Value.CompareTo(y.Value);
+
+        if(valueComparison == 0)
+        {
+            return x.Kind.CompareTo(y.Kind);
+        }
+
+        return valueComparison;
     }
 }

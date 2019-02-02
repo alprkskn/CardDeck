@@ -4,11 +4,20 @@ using UnityEngine;
 
 public class CardSortTest
 {
-    private List<CardInfo> _deck;
+    public enum SortMethod
+    {
+        Straight,
+        Matching,
+        Smart
+    }
 
-    public CardSortTest(int deckCount)
+    private List<CardInfo> _deck;
+    private SortMethod _method;
+
+    public CardSortTest(int deckCount, SortMethod method)
     {
         _deck = new List<CardInfo>(deckCount);
+        _method = method;
         HashSet<int> cardSet = new HashSet<int>();
 
         while(cardSet.Count < deckCount)
@@ -22,9 +31,10 @@ public class CardSortTest
         }
     }
 
-    public CardSortTest(int[] deck)
+    public CardSortTest(int[] deck, SortMethod method)
     {
         _deck = new List<CardInfo>(deck.Length);
+        _method = method;
 
         for(int i = 0; i < deck.Length; i++)
         {
@@ -35,7 +45,15 @@ public class CardSortTest
     public void ExecuteAndLog()
     {
         Debug.Log("Initial deck:\n" + ListCards());
-        CardUtils.StraightSort(_deck);
+        switch (_method)
+        {
+            case SortMethod.Straight:
+                CardUtils.StraightSort(_deck);
+                break;
+            case SortMethod.Matching:
+                CardUtils.MatchingSort(_deck);
+                break;
+        }
         Debug.Log("Sorted deck:\n" + ListCards());
     }
 
