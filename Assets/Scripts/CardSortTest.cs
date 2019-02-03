@@ -53,6 +53,9 @@ public class CardSortTest
             case SortMethod.Matching:
                 CardUtils.MatchingSort(_deck);
                 break;
+            case SortMethod.Smart:
+                CardUtils.SmartSort(_deck);
+                break;
         }
         Debug.Log("Sorted deck:\n" + ListCards());
     }
