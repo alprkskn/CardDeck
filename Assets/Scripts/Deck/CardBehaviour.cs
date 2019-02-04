@@ -10,7 +10,7 @@ public class CardBehaviour : MonoBehaviour
     private const float RotationDamping = 0.8f;
     private const float HighlightCoroutineDuration = 0.1f;
     private const float HoverHighlightDuration = 0.3f;
-    private const float HoldHighlightDuration = 1f;
+    private const float HoldHighlightThreshold = 30f;
 
     public event Action<CardBehaviour> CursorEnter;
     public event Action<CardBehaviour> CursorExit;
@@ -95,18 +95,28 @@ public class CardBehaviour : MonoBehaviour
     #region EventSystem Listeners
     public void OnPointerEnter(BaseEventData eventArgs)
     {
-        _highlightCoroutine = StartCoroutine(HoverCoroutine());
+        var ptrEvent = eventArgs as PointerEventData;
+
+        if (ptrEvent != null && ptrEvent.pointerId < 0)
+        {
+            _highlightCoroutine = StartCoroutine(HoverCoroutine());
+        }
     }
 
     public void OnPointerExit(BaseEventData eventArgs)
     {
-        if(_highlightCoroutine != null)
-        {
-            StopCoroutine(_highlightCoroutine);
-            _highlightCoroutine = null;
-        }
+        var ptrEvent = eventArgs as PointerEventData;
 
-        if (CursorExit != null) CursorExit(this);
+        if (ptrEvent != null && ptrEvent.pointerId < 0)
+        {
+            if (_highlightCoroutine != null)
+            {
+                StopCoroutine(_highlightCoroutine);
+                _highlightCoroutine = null;
+            }
+
+            if (CursorExit != null) CursorExit(this);
+        }
     }
 
     public void OnPointerDown(BaseEventData eventArgs)
@@ -115,7 +125,7 @@ public class CardBehaviour : MonoBehaviour
         
         if(ptrEvent != null)
         {
-            if(ptrEvent.pointerId > 0)
+            if(ptrEvent.pointerId >= 0)
             {
                 _cursorHoldCoroutine = StartCoroutine(HoldDownCoroutine());
                 if (CursorEnter != null) CursorEnter(this);
@@ -129,11 +139,21 @@ public class CardBehaviour : MonoBehaviour
 
     public void OnPointerUp(BaseEventData eventArgs)
     {
-        if (_cursorHoldCoroutine != null)
+        var ptrEvent = eventArgs as PointerEventData;
+
+        if (ptrEvent != null && ptrEvent.pointerId >= 0)
         {
-            StopCoroutine(_cursorHoldCoroutine);
-            _cursorHoldCoroutine = null;
-            if (CursorExit != null) CursorExit(this);
+            if (_cursorHoldCoroutine != null)
+            {
+                StopCoroutine(_cursorHoldCoroutine);
+                _cursorHoldCoroutine = null;
+                if (CursorExit != null) CursorExit(this);
+            }
+            else
+            {
+                if (CursorUp != null) CursorUp(this);
+            }
+
         }
         else
         {
@@ -171,9 +191,20 @@ public class CardBehaviour : MonoBehaviour
 
     private IEnumerator HoldDownCoroutine()
     {
-        yield return new WaitForSeconds(HoverHighlightDuration);
-        _cursorHoldCoroutine = null;
-        if (CursorExit != null) CursorExit(this);
-        if (CursorDown != null) CursorDown(this);
+        var initialPos = InputHelper.GetCursorPosition();
+
+        while (true)
+        {
+            var currentPos = InputHelper.GetCursorPosition();
+
+            if(Vector2.Distance(currentPos, initialPos) > HoldHighlightThreshold)
+            {
+                _cursorHoldCoroutine = null;
+                if (CursorExit != null) CursorExit(this);
+                if (CursorDown != null) CursorDown(this);
+                break;
+            }
+            yield return null;
+        }
     }
 }
