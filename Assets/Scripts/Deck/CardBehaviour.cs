@@ -1,10 +1,18 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
+using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class CardBehaviour : MonoBehaviour
 {
+    public event Action<CardBehaviour> CursorEnter;
+    public event Action<CardBehaviour> CursorExit;
+    public event Action<CardBehaviour> CursorDown;
+    public event Action<CardBehaviour> CursorUp;
+
     [SerializeField] private CardInfo _info;
+    [SerializeField] private Image _highlight;
 
     private Vector3? _targetPosition;
     private Quaternion? _targetRotation;
@@ -12,6 +20,11 @@ public class CardBehaviour : MonoBehaviour
 
     private const float PositionDamping = 0.8f;
     private const float RotationDamping = 0.8f;
+    private const float HighlightCoroutineDuration = 0.1f;
+    private const float HoverHighlightDuration = 0.3f;
+
+    private Coroutine _highlightCoroutine;
+    private Coroutine _cursorHoverCoroutine;
 
     public RectTransform RectTransform
     {
@@ -49,5 +62,70 @@ public class CardBehaviour : MonoBehaviour
             RectTransform.position = position;
             RectTransform.rotation = rotation;
         }
+    }
+
+    public void ToggleHighlight(bool on)
+    {
+        if(_highlightCoroutine != null)
+        {
+            StopCoroutine(_highlightCoroutine);
+        }
+
+        _highlightCoroutine = StartCoroutine(HighlightCoroutine(on));
+    }
+
+    #region EventSystem Listeners
+    public void OnPointerEnter(BaseEventData eventArgs)
+    {
+        _highlightCoroutine = StartCoroutine(HoverCoroutine());
+    }
+
+    public void OnPointerExit(BaseEventData eventArgs)
+    {
+        if(_highlightCoroutine != null)
+        {
+            StopCoroutine(_highlightCoroutine);
+            _highlightCoroutine = null;
+        }
+
+        if (CursorExit != null) CursorExit(this);
+    }
+
+    public void OnPointerDown(BaseEventData eventArgs)
+    {
+        if (CursorDown != null) CursorDown(this);
+    }
+
+    public void OnPointerUp(BaseEventData eventArgs)
+    {
+        if (CursorUp != null) CursorUp(this);
+    }
+    #endregion
+
+    private IEnumerator HighlightCoroutine(bool on)
+    {
+        var initialAlpha = _highlight.color.a;
+
+        float timer = 0f;
+
+        _highlight.enabled = true;
+
+        while(timer < HighlightCoroutineDuration)
+        {
+            _highlight.color.SetAlpha(Mathf.Lerp(initialAlpha, on ? 1f : 0f, timer / HighlightCoroutineDuration));
+            yield return null;
+            timer += Time.deltaTime;
+        }
+
+        _highlight.color.SetAlpha(on ? 1f : 0f);
+        _highlight.enabled = on;
+        _highlightCoroutine = null;
+    }
+
+    private IEnumerator HoverCoroutine()
+    {
+        yield return new WaitForSeconds(HoverHighlightDuration);
+        _highlightCoroutine = null;
+        if (CursorEnter != null) CursorEnter(this);
     }
 }

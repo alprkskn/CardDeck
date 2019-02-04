@@ -13,6 +13,12 @@ public class BezierSpline
         _controlPoints = controlPoints;
     }
 
+    public Vector3 GetPoint(float t, out Vector3 normal)
+    {
+        Vector3 dummyTangent;
+        return GetPoint(t, out dummyTangent, out normal);
+    }
+
     public Vector3 GetPoint(float t, out Vector3 tangent, out Vector3 normal)
     {
         var p1 = _controlPoints[0].position;
