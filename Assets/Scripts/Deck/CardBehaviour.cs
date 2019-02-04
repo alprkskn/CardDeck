@@ -123,12 +123,12 @@ public class CardBehaviour : MonoBehaviour
 
         while(timer < HighlightCoroutineDuration)
         {
-            _highlight.color.SetAlpha(Mathf.Lerp(initialAlpha, on ? 1f : 0f, timer / HighlightCoroutineDuration));
+            _highlight.SetAlpha(Mathf.Lerp(initialAlpha, on ? 1f : 0f, timer / HighlightCoroutineDuration));
             yield return null;
             timer += Time.deltaTime;
         }
 
-        _highlight.color.SetAlpha(on ? 1f : 0f);
+        _highlight.SetAlpha(on ? 1f : 0f);
         _highlight.enabled = on;
         _highlightCoroutine = null;
     }

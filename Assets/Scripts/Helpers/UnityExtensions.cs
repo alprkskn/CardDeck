@@ -1,11 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine.UI;
 
 public static class UnityExtensions
 {
-    public static void SetAlpha(this Color c, float alpha)
+    public static void SetAlpha(this Image image, float alpha)
     {
-        c.a = alpha;
+        var color = image.color;
+        color.a = alpha;
+        image.color = color;
     }
 }

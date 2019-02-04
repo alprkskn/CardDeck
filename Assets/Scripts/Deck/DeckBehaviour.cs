@@ -50,6 +50,11 @@ public class DeckBehaviour : MonoBehaviour
                 SetCardTarget(_cards[i], position, normal);
             }
 
+            if (_cards[i] != _highlighted)
+            {
+                _cards[i].ToggleHighlight(false);
+            }
+
             _cards[i].RectTransform.SetSiblingIndex(i);
         }
     }
