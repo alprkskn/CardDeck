@@ -10,6 +10,7 @@ public class CardBehaviour : MonoBehaviour
     private const float RotationDamping = 0.8f;
     private const float HighlightCoroutineDuration = 0.1f;
     private const float HoverHighlightDuration = 0.3f;
+    private const float HoldHighlightDuration = 1f;
 
     public event Action<CardBehaviour> CursorEnter;
     public event Action<CardBehaviour> CursorExit;
@@ -26,6 +27,7 @@ public class CardBehaviour : MonoBehaviour
 
     [SerializeField] private CardInfo _info;
     private Coroutine _highlightCoroutine;
+    private Coroutine _cursorHoldCoroutine;
     private Coroutine _cursorHoverCoroutine;
 
     public CardInfo Info
@@ -109,12 +111,34 @@ public class CardBehaviour : MonoBehaviour
 
     public void OnPointerDown(BaseEventData eventArgs)
     {
-        if (CursorDown != null) CursorDown(this);
+        var ptrEvent = eventArgs as PointerEventData;
+        
+        if(ptrEvent != null)
+        {
+            if(ptrEvent.pointerId > 0)
+            {
+                _cursorHoldCoroutine = StartCoroutine(HoldDownCoroutine());
+                if (CursorEnter != null) CursorEnter(this);
+            }
+            else
+            {
+                if (CursorDown != null) CursorDown(this);
+            }
+        }
     }
 
     public void OnPointerUp(BaseEventData eventArgs)
     {
-        if (CursorUp != null) CursorUp(this);
+        if (_cursorHoldCoroutine != null)
+        {
+            StopCoroutine(_cursorHoldCoroutine);
+            _cursorHoldCoroutine = null;
+            if (CursorExit != null) CursorExit(this);
+        }
+        else
+        {
+            if (CursorUp != null) CursorUp(this);
+        }
     }
     #endregion
 
@@ -143,5 +167,13 @@ public class CardBehaviour : MonoBehaviour
         yield return new WaitForSeconds(HoverHighlightDuration);
         _highlightCoroutine = null;
         if (CursorEnter != null) CursorEnter(this);
+    }
+
+    private IEnumerator HoldDownCoroutine()
+    {
+        yield return new WaitForSeconds(HoverHighlightDuration);
+        _cursorHoldCoroutine = null;
+        if (CursorExit != null) CursorExit(this);
+        if (CursorDown != null) CursorDown(this);
     }
 }
