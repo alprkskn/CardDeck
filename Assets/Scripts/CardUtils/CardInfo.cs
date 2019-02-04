@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
+[Serializable]
 public struct CardInfo : IEquatable<CardInfo>
 {
     public CardKinds Kind;
@@ -9,6 +10,36 @@ public struct CardInfo : IEquatable<CardInfo>
     public int Id
     {
         get { return (int)Kind * CardUtils.ValueCount + (int)Value; }
+    }
+
+    public string ValueText
+    {
+        get
+        {
+            if((int)Value < 1 || (int)Value > 9)
+            {
+                return Value.ToString();
+            }
+            else
+            {
+                return ((int)Value + 1).ToString();
+            }
+        }
+    }
+
+    public Color ValueColor
+    {
+        get
+        {
+            if(Kind == CardKinds.Clubs || Kind == CardKinds.Spades)
+            {
+                return Color.black;
+            }
+            else
+            {
+                return Color.red;
+            }
+        }
     }
 
     public int CardScore

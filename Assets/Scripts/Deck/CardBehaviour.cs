@@ -6,23 +6,25 @@ using UnityEngine.UI;
 
 public class CardBehaviour : MonoBehaviour
 {
-    public event Action<CardBehaviour> CursorEnter;
-    public event Action<CardBehaviour> CursorExit;
-    public event Action<CardBehaviour> CursorDown;
-    public event Action<CardBehaviour> CursorUp;
-
-    [SerializeField] private CardInfo _info;
-    [SerializeField] private Image _highlight;
-
-    private Vector3? _targetPosition;
-    private Quaternion? _targetRotation;
-    private RectTransform _rectTransform;
-
     private const float PositionDamping = 0.8f;
     private const float RotationDamping = 0.8f;
     private const float HighlightCoroutineDuration = 0.1f;
     private const float HoverHighlightDuration = 0.3f;
 
+    public event Action<CardBehaviour> CursorEnter;
+    public event Action<CardBehaviour> CursorExit;
+    public event Action<CardBehaviour> CursorDown;
+    public event Action<CardBehaviour> CursorUp;
+
+    [SerializeField] private Image _highlight;
+    [SerializeField] private Image _subImage;
+    [SerializeField] private Text _text;
+
+    private Vector3? _targetPosition;
+    private Quaternion? _targetRotation;
+    private RectTransform _rectTransform;
+
+    [SerializeField] private CardInfo _info;
     private Coroutine _highlightCoroutine;
     private Coroutine _cursorHoverCoroutine;
 
@@ -72,6 +74,15 @@ public class CardBehaviour : MonoBehaviour
         }
 
         _highlightCoroutine = StartCoroutine(HighlightCoroutine(on));
+    }
+
+    public void SetCardInfo(CardInfo info)
+    {
+        _info = info;
+
+        _text.text = info.ValueText;
+        _text.color = info.ValueColor;
+        _subImage.sprite = BoardManager.Instance.GetSymbolImage(info.Kind);
     }
 
     #region EventSystem Listeners

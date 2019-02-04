@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public static class CardUtils
 {
@@ -21,6 +22,31 @@ public static class CardUtils
     public static CardValues GetValueById(int id)
     {
         return (CardValues)(id % ValueCount);
+    }
+
+    public static CardInfo GetRandomCardInfo()
+    {
+        return new CardInfo((CardKinds)Random.Range(0, KindCount), (CardValues)Random.Range(0, ValueCount));
+    }
+
+    public static CardInfo[] GetUniqueDeck(int count)
+    {
+        var deck = new CardInfo[count];
+        HashSet<CardInfo> set = new HashSet<CardInfo>();
+
+        while(set.Count < count)
+        {
+            set.Add(GetRandomCardInfo());
+        }
+
+        int index = 0;
+
+        foreach(var card in set)
+        {
+            deck[index++] = card;
+        }
+
+        return deck;
     }
 
     #region Regular Sorting

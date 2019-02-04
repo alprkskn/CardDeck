@@ -58,4 +58,12 @@ public class BezierSpline
 
         return Mathf.Clamp01(t);
     }
+
+    public Vector3 FindClosestPoint(Vector3 point, out float t)
+    {
+        t = FindTOnPoint(point);
+
+        Vector3 normal;
+        return GetPoint(t, out normal);
+    }
 }
