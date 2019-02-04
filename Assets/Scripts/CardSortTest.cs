@@ -4,13 +4,6 @@ using UnityEngine;
 
 public class CardSortTest
 {
-    public enum SortMethod
-    {
-        Straight,
-        Matching,
-        Smart
-    }
-
     private List<CardInfo> _deck;
     private SortMethod _method;
 

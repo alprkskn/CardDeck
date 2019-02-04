@@ -6,7 +6,7 @@ public class SortTest : MonoBehaviour
 {
     private CardSortTest test;
 
-    public CardSortTest.SortMethod Method;
+    public SortMethod Method;
     // Use this for initialization
     void Start()
     {

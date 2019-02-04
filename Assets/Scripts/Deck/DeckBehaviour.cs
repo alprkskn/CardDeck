@@ -1,15 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DeckBehaviour : MonoBehaviour
 {
     [SerializeField] private Transform[] _bezierPoints;
     [SerializeField] private Collider2D _deckBounds;
-
-    [SerializeField] private float _maxCardOffset;
-
     [SerializeField] private RectTransform _cardsParent;
+    [SerializeField] private Button _straightSortButton;
+    [SerializeField] private Button _matchingSortButton;
+    [SerializeField] private Button _smartSortButton;
+    [SerializeField] private float _maxCardOffset;
 
     private BezierSpline _deckBezier;
     private List<CardBehaviour> _cards;
@@ -22,11 +24,31 @@ public class DeckBehaviour : MonoBehaviour
 
     private const float CardHighlightOffset = 45f;
     private const float CardInsertionThreshold = 45f;
+    private const float CursorLockThreshold = 15f;
 
     public void Initialize()
     {
         _deckBezier = new BezierSpline(_bezierPoints);
         _cards = new List<CardBehaviour>();
+
+        _straightSortButton.onClick.RemoveAllListeners();
+        _matchingSortButton.onClick.RemoveAllListeners();
+        _smartSortButton.onClick.RemoveAllListeners();
+
+        _straightSortButton.onClick.AddListener(() =>
+        {
+            Sort(SortMethod.Straight);
+        });
+
+        _matchingSortButton.onClick.AddListener(() =>
+        {
+            Sort(SortMethod.Matching);
+        });
+
+        _smartSortButton.onClick.AddListener(() =>
+        {
+            Sort(SortMethod.Smart);
+        });
     }
 
     public void AddCard(CardBehaviour card)
@@ -36,6 +58,28 @@ public class DeckBehaviour : MonoBehaviour
         ReorderCards();
 
         RegisterCardEvents(card);
+    }
+
+    public void RemoveCard(CardBehaviour card)
+    {
+        if (_cards.Remove(card))
+        {
+            card.RectTransform.SetParent(null, true);
+            UnregisterCardEvents(card);
+            ReorderCards();
+        }
+    }
+
+    public void ClearDeck()
+    {
+        foreach(var card in _cards)
+        {
+            card.RectTransform.SetParent(null, true);
+            UnregisterCardEvents(card);
+            Destroy(card);
+        }
+
+        _cards.Clear();
     }
 
     public void ReorderCards()
@@ -57,6 +101,43 @@ public class DeckBehaviour : MonoBehaviour
 
             _cards[i].RectTransform.SetSiblingIndex(i);
         }
+    }
+
+    public void Sort(SortMethod method)
+    {
+        List<CardInfo> cards = new List<CardInfo>(_cards.Count);
+
+        for (int i = 0; i < _cards.Count; i++)
+        {
+            cards.Add(_cards[i].Info);
+        }
+
+        switch (method)
+        {
+            case SortMethod.Straight:
+                CardUtils.StraightSort(cards);
+                break;
+            case SortMethod.Matching:
+                CardUtils.MatchingSort(cards);
+                break;
+            case SortMethod.Smart:
+                CardUtils.SmartSort(cards);
+                break;
+        }
+
+        // Reorder the card instance list
+        for (int i = 0; i < cards.Count; i++)
+        {
+            var card = _cards.Find((x) => x.Info.Equals(cards[i]));
+
+            if (card != null)
+            {
+                _cards.Remove(card);
+                _cards.Insert(i, card);
+            }
+        }
+
+        ReorderCards();
     }
 
     private void RegisterCardEvents(CardBehaviour card)
@@ -160,8 +241,13 @@ public class DeckBehaviour : MonoBehaviour
         }
 
         _selected = null;
-        StopCoroutine(_moveCardCoroutine);
-        _moveCardCoroutine = null;
+
+        if (_moveCardCoroutine != null)
+        {
+            StopCoroutine(_moveCardCoroutine);
+            _moveCardCoroutine = null;
+        }
+
         ReorderCards();
     }
 
@@ -225,12 +311,7 @@ public class DeckBehaviour : MonoBehaviour
 
         while (true)
         {
-            var cursorPosition = Input.mousePosition;
-
-            if (Input.touchCount > 0)
-            {
-                cursorPosition = Input.GetTouch(0).position;
-            }
+            var cursorPosition = InputHelper.GetCursorPosition();
 
             card.SetTarget(cursorPosition, Quaternion.identity);
 

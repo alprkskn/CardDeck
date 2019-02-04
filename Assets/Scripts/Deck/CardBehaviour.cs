@@ -28,6 +28,11 @@ public class CardBehaviour : MonoBehaviour
     private Coroutine _highlightCoroutine;
     private Coroutine _cursorHoverCoroutine;
 
+    public CardInfo Info
+    {
+        get { return _info; }
+    }
+
     public RectTransform RectTransform
     {
         get

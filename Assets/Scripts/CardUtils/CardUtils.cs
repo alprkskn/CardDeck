@@ -49,6 +49,25 @@ public static class CardUtils
         return deck;
     }
 
+    public static CardInfo[] GetTestCaseDeck()
+    {
+        var deck = new CardInfo[11];
+
+        deck[0] = new CardInfo(CardKinds.Hearts, CardValues.A);
+        deck[1] = new CardInfo(CardKinds.Spades, CardValues.Two);
+        deck[2] = new CardInfo(CardKinds.Diamonds, CardValues.Five);
+        deck[3] = new CardInfo(CardKinds.Hearts, CardValues.Four);
+        deck[4] = new CardInfo(CardKinds.Spades, CardValues.A);
+        deck[5] = new CardInfo(CardKinds.Diamonds, CardValues.Three);
+        deck[6] = new CardInfo(CardKinds.Clubs, CardValues.Four);
+        deck[7] = new CardInfo(CardKinds.Spades, CardValues.Four);
+        deck[8] = new CardInfo(CardKinds.Diamonds, CardValues.A);
+        deck[9] = new CardInfo(CardKinds.Spades, CardValues.Three);
+        deck[10] = new CardInfo(CardKinds.Diamonds, CardValues.Four);
+
+        return deck;
+    }
+
     #region Regular Sorting
     public static List<CardInfo[]> StraightSort(List<CardInfo> deck)
     {
@@ -233,22 +252,29 @@ public static class CardUtils
             }
         }
 
-        for(int i = deck.Count - 1; i >= 0; i--)
+        if (possibleGroupCombinations.Count > 0)
         {
-            if (usedCards.Contains(deck[i]))
+            for (int i = deck.Count - 1; i >= 0; i--)
             {
-                deck.RemoveAt(i);
+                if (usedCards.Contains(deck[i]))
+                {
+                    deck.RemoveAt(i);
+                }
+            }
+
+            int index = 0;
+            foreach (var group in selected)
+            {
+                foreach (var card in group)
+                {
+                    deck.Insert(index, card);
+                    index++;
+                }
             }
         }
-
-        int index = 0;
-        foreach(var group in selected)
+        else
         {
-            foreach(var card in group)
-            {
-                deck.Insert(index, card);
-                index++;
-            }
+            selected = new List<CardInfo[]>();
         }
 
         return selected;

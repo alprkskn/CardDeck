@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class BoardManager : Singleton<BoardManager>
 {
@@ -8,6 +9,9 @@ public class BoardManager : Singleton<BoardManager>
     [SerializeField] private DeckBehaviour _playerDeck;
 
     [SerializeField] private Sprite[] SymbolImages;
+    [SerializeField] private Button _shuffleButton;
+
+    private bool _shuffling;
 
     public Sprite GetSymbolImage(CardKinds kind)
     {
@@ -18,8 +22,34 @@ public class BoardManager : Singleton<BoardManager>
     void Start()
     {
         _playerDeck.Initialize();
+    }
 
-        var deck = CardUtils.GetUniqueDeck(11);
+    public void Shuffle()
+    {
+        if (!_shuffling)
+        {
+            _playerDeck.ClearDeck();
+
+            var deck = CardUtils.GetUniqueDeck(11);
+
+            StartCoroutine(ShuffleCoroutine(deck, 0.075f));
+        }
+    }
+
+    public void DealTestCase()
+    {
+        if(!_shuffling)
+        {
+            _playerDeck.ClearDeck();
+            var deck = CardUtils.GetTestCaseDeck();
+            StartCoroutine(ShuffleCoroutine(deck, 0.075f));
+        }
+    }
+
+    private IEnumerator ShuffleCoroutine(CardInfo[] deck, float nextCardDuration)
+    {
+        _shuffling = true;
+        _shuffleButton.interactable = false;
 
         for(int i = 0; i < deck.Length; i++)
         {
@@ -27,6 +57,11 @@ public class BoardManager : Singleton<BoardManager>
             var card = go.GetComponent<CardBehaviour>();
             card.SetCardInfo(deck[i]);
             _playerDeck.AddCard(card);
+
+            yield return new WaitForSeconds(nextCardDuration);
         }
+
+        _shuffling = false;
+        _shuffleButton.interactable = true;
     }
 }
